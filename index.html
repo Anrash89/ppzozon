@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f7f9fc">
+  <meta name="description" content="Перенос QR-кодов Ozon из PDF в Excel. Локально, без сервера и регистрации.">
+  <title>QR → Excel · Ozon</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brand-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><path d="M15 15h2v2h-2zM19 15h2v2h-2zM15 19h2v2h-2zM19 19h2v2h-2z" fill="currentColor"/></svg></span><span>QR <span class="brand-arrow">→</span> Excel</span></div>
+    <div class="top-note"><span class="privacy-dot"></span>Работает в браузере · Без загрузки на сервер</div>
+  </header>
+  <main class="container" id="app">
+    <section class="intro">
+      <div class="eyebrow">ИНСТРУМЕНТ ДЛЯ OZON</div>
+      <h1>QR-коды из PDF<br><span>сразу в Excel</span></h1>
+      <p>Загрузи PDF с QR-кодами и Excel-шаблон «Состав грузомест». Мы перенесём коды в нужный столбец и сохраним исходную таблицу.</p>
+    </section>
+
+    <section class="upload-grid" aria-label="Загрузка документов">
+      <div class="upload-card" id="pdfDrop" role="button" tabindex="0" aria-label="Выбрать PDF с QR-кодами">
+        <div class="upload-icon pdf-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M7 2.5h7l5 5V20a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 20V4A1.5 1.5 0 0 1 6.5 2.5H7Z" stroke="currentColor" stroke-width="1.7"/><path d="M14 3v5h5M8 13h8M8 17h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+        </div>
+        <div class="upload-copy">
+          <div class="upload-head"><span class="step-no">01</span><h2>PDF с QR-кодами</h2></div>
+          <p>Этикетки, скачанные из Ozon</p>
+          <div class="file-info" id="pdfFileName">Перетащи PDF сюда или выбери файл</div>
+        </div>
+        <span class="choose-file" id="pdfAction">Выбрать PDF <span aria-hidden="true">↗</span></span>
+        <input id="pdfInput" type="file" accept=".pdf,application/pdf" hidden>
+      </div>
+
+      <div class="upload-card" id="excelDrop" role="button" tabindex="0" aria-label="Выбрать Excel-шаблон">
+        <div class="upload-icon excel-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M7 2.5h7l5 5V20a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 20V4A1.5 1.5 0 0 1 6.5 2.5H7Z" stroke="currentColor" stroke-width="1.7"/><path d="M14 3v5h5M8 13l8 6m0-6-8 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></div>
+        <div class="upload-copy">
+          <div class="upload-head"><span class="step-no">02</span><h2>Excel-шаблон</h2></div>
+          <p>Состав грузомест, формат .xlsx</p>
+          <div class="file-info" id="excelFileName">Перетащи Excel сюда или выбери файл</div>
+        </div>
+        <span class="choose-file" id="excelAction">Выбрать Excel <span aria-hidden="true">↗</span></span>
+        <input id="excelInput" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden>
+      </div>
+    </section>
+
+    <section class="status" id="status" role="status" aria-live="polite">
+      <span class="status-circle neutral" id="statusIcon" aria-hidden="true">i</span>
+      <div><strong id="statusTitle">Добавь два файла, чтобы начать</strong><p id="statusDescription">Обработка начнётся автоматически после загрузки.</p></div>
+      <div class="progress-track" id="progressTrack" hidden><div class="progress-bar" id="progressBar"></div></div>
+    </section>
+
+    <section id="resultPanel" class="results" hidden>
+      <div class="section-heading"><div><span class="kicker">РЕЗУЛЬТАТ ПРОВЕРКИ</span><h2>Данные готовы к переносу</h2></div><button type="button" id="resetBtn" class="text-button">Начать заново</button></div>
+
+      <div class="stats-grid">
+        <div class="stat"><span>QR-кодов в PDF</span><strong id="statCodes">0</strong><small id="statPages">0 страниц</small></div>
+        <div class="stat"><span>Строк в Excel</span><strong id="statRows">0</strong><small id="statSheet">Состав грузомест</small></div>
+        <div class="stat"><span>Будет заполнено</span><strong id="statFilled">0</strong><small id="statMode">строк с кодами</small></div>
+      </div>
+
+      <div class="mode-section" id="modeSection" hidden>
+        <div class="mode-heading"><h3>Как поступить с разным количеством?</h3><p id="modeDescription"></p></div>
+        <label class="mode-option" id="existingWrap"><input type="radio" name="fillMode" value="existing" checked><span class="custom-radio"></span><span><strong>Заполнить только строки из Excel</strong><small id="existingHint">Не добавлять товары и строки</small></span></label>
+        <label class="mode-option" id="extendWrap"><input type="radio" name="fillMode" value="extend"><span class="custom-radio"></span><span><strong>Добавить строки для всех QR-кодов</strong><small id="extendHint">Новые строки получат данные последнего товара</small></span></label>
+        <p class="mode-warning" id="modeWarning"></p>
+      </div>
+
+      <div class="table-area">
+        <div class="table-heading"><div><h3>Предпросмотр Excel</h3><p>В столбце «QR-код» будут новые значения. Остальные столбцы сохранятся.</p></div><button id="toggleRows" type="button" class="text-button">Показать все</button></div>
+        <div class="table-scroll"><table><thead><tr><th>СТРОКА</th><th>АРТИКУЛ</th><th>ШТРИХКОД ТОВАРА</th><th>QR-КОД (БЫЛО)</th><th>QR-КОД (БУДЕТ)</th></tr></thead><tbody id="previewBody"></tbody></table></div>
+        <p class="table-footnote" id="previewNote"></p>
+      </div>
+
+      <div class="download-section"><div><strong id="downloadHeading">Excel готов</strong><p id="downloadNote">Сохранится исходный шаблон и лист «Инструкция».</p></div><button class="primary-button" type="button" id="downloadBtn"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 16.5V20h16v-3.5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Скачать готовый Excel</span></button></div>
+    </section>
+
+    <section class="how-it-works"><h2>Что делает сервис</h2><div class="how-grid"><p><span class="how-check">✓</span> Считывает коды в порядке страниц PDF</p><p><span class="how-check">✓</span> Переносит в столбец «QR-код»</p><p><span class="how-check">✓</span> Сохраняет артикулы, штрихкоды, грузоместа и листы</p><p><span class="how-check">✓</span> Не передаёт файлы на сервер</p></div></section>
+  </main>
+  <footer class="footer">QR → Excel для Ozon <span>·</span> PDF с выделяемым текстом <span>·</span> .xlsx</footer>
+  <script src="vendor/jszip.min.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
